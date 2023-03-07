@@ -1,0 +1,3 @@
+procs:
+  cargo-watch:
+    shell: "cargo watch --clear -x check -x test -x run"
