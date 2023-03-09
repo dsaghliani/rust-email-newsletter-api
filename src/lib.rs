@@ -12,7 +12,7 @@ use std::net::TcpListener;
 ///
 /// Propagates the error if:
 ///
-/// - a hyper server can't be created from the provided `TcpListener`;
+/// - the server can't be created from the provided `TcpListener`;
 /// - something goes wrong when running the server.
 pub async fn run(listener: TcpListener) -> anyhow::Result<()> {
     let router = build_router();
@@ -20,8 +20,7 @@ pub async fn run(listener: TcpListener) -> anyhow::Result<()> {
     Server::from_tcp(listener)
         .map_err(|err| {
             anyhow!(
-                "Couldn't create a hyper server from the provided `TcpListener`:\
-                {err}"
+                "Couldn't create the server from the provided `TcpListener`: {err}"
             )
         })?
         .serve(router.into_make_service())
