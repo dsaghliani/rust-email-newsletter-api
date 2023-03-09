@@ -15,7 +15,6 @@ name = "zero2prod"
 [dependencies]
 anyhow = "1.0.69"
 axum = { version = "0.6.10", features = ["macros"] }
-hyper = { version = "0.14.24", features = ["full"] }
 tokio = { version = "1.26.0", features = ["full"] }
 
 [dev-dependencies]
