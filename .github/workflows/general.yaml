@@ -27,15 +27,13 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: sqlx-${{ env.SQLX_VERSION }}
-      - name: Install cargo-binstall
-        run: |
-          wget ${{ env.CARGO_BINSTALL_URL }}
-          tar xvf cargo-binstall-x86_64-unknown-linux-musl.tgz
       - name: Install sqlx-cli
         run:
-          ./cargo-binstall sqlx-cli
+          cargo install sqlx-cli
           --version=${{ env.SQLX_VERSION }}
-          -y
+          --features ${{ env.SQLX_FEATURES }}
+          --no-default-features
+          --locked
       - name: Migrate database
         run: |
           sudo apt-get install libpq-dev -y
@@ -74,15 +72,13 @@ jobs:
       - uses: Swatinem/rust-cache@v2
         with:
           key: sqlx-${{ env.SQLX_VERSION }}
-      - name: Install cargo-binstall
-        run: |
-          wget ${{ env.CARGO_BINSTALL_URL }}
-          tar xvf cargo-binstall-x86_64-unknown-linux-musl.tgz
       - name: Install sqlx-cli
         run:
-          ./cargo-binstall sqlx-cli
+          cargo install sqlx-cli
           --version=${{ env.SQLX_VERSION }}
-          -y
+          --features ${{ env.SQLX_FEATURES }}
+          --no-default-features
+          --locked
       - name: Migrate database
         run: |
           sudo apt-get install libpq-dev -y
@@ -119,8 +115,11 @@ jobs:
         run: ./cargo-binstall cargo-tarpaulin -y
       - name: Install sqlx-cli
         run:
-          ./cargo-binstall sqlx-cli
+          cargo install sqlx-cli
           --version=${{ env.SQLX_VERSION }}
+          --features ${{ env.SQLX_FEATURES }}
+          --no-default-features
+          --locked
           -y
       - name: Migrate database
         run: sqlx database setup
