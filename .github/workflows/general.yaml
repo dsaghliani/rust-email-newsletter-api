@@ -6,7 +6,6 @@ env:
   CARGO_TERM_COLOR: always
   SQLX_VERSION: 0.6.2
   SQLX_FEATURES: "rustls,postgres"
-  CARGO_BINSTALL_URL: https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz
 
 jobs:
   test:
@@ -104,15 +103,11 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - name: Install libpq
         run: sudo apt-get update && sudo apt-get install postgresql-client -y
-      - name: Install cargo-binstall
-        run: |
-          wget ${{ env.CARGO_BINSTALL_URL }}
-          tar xvf cargo-binstall-x86_64-unknown-linux-musl.tgz
       - uses: Swatinem/rust-cache@v2
         with:
           key: sqlx-${{ env.SQLX_VERSION }}
       - name: Install tarpaulin
-        run: ./cargo-binstall cargo-tarpaulin -y
+        uses: taiki-e/install-action@cargo-tarpaulin
       - name: Install sqlx-cli
         run:
           cargo install sqlx-cli
