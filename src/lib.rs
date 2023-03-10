@@ -2,6 +2,7 @@
 
 use anyhow::anyhow;
 use axum::{
+    extract::State,
     http::StatusCode,
     response::IntoResponse,
     routing::{get, post},
@@ -11,6 +12,7 @@ use config::{Config, ConfigError};
 use serde::Deserialize;
 use sqlx::PgPool;
 use std::net::TcpListener;
+use uuid::Uuid;
 
 /// Run the server.
 ///
@@ -60,9 +62,27 @@ struct SubscriptionData {
 
 #[axum::debug_handler]
 async fn subscribe(
+    State(connection_pool): State<PgPool>,
     Form(subscription_data): Form<SubscriptionData>,
 ) -> impl IntoResponse {
-    StatusCode::OK
+    match sqlx::query!(
+        r#"
+        INSERT INTO subscriptions (id, email, name)
+        VALUES ($1, $2, $3)
+        "#,
+        Uuid::new_v4(),
+        subscription_data.email,
+        subscription_data.name
+    )
+    .execute(&connection_pool)
+    .await
+    {
+        Ok(_) => StatusCode::OK,
+        Err(error) => {
+            eprintln!("Failed to execute query: {error}");
+            StatusCode::INTERNAL_SERVER_ERROR
+        }
+    }
 }
 
 /// Load the configuration for the app.
@@ -98,6 +118,7 @@ pub struct DatabaseSettings {
 }
 
 impl DatabaseSettings {
+    #[must_use]
     pub fn connection_string(&self) -> String {
         format!(
             "postgres://{}:{}@{}:{}/{}",
