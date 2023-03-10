@@ -22,10 +22,10 @@ async fn health_check_works() {
 #[sqlx::test]
 async fn subscribe_returns_200_for_valid_form_data(pool: PgPool) {
     // Arrange.
-    sqlx::migrate!()
-        .run(&pool)
-        .await
-        .expect("the migrations should run");
+    // sqlx::migrate!()
+    //     .run(&pool)
+    //     .await
+    //     .expect("the migrations should run");
 
     let address = spawn_app();
     let address = format!("{address}/subscriptions");
