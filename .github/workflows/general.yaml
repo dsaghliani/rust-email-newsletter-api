@@ -115,7 +115,6 @@ jobs:
           --features ${{ env.SQLX_FEATURES }}
           --no-default-features
           --locked
-          -y
       - name: Migrate database
         run: sqlx database setup
       - name: Generate code coverage
