@@ -20,8 +20,11 @@ use std::net::TcpListener;
 ///
 /// - the server can't be created from the provided `TcpListener`;
 /// - something goes wrong when running the server.
-pub async fn run(listener: TcpListener) -> anyhow::Result<()> {
-    let router = build_router();
+pub async fn run(
+    listener: TcpListener,
+    connection_pool: PgPool,
+) -> anyhow::Result<()> {
+    let router = build_router(connection_pool);
 
     Server::from_tcp(listener)
         .map_err(|err| {
@@ -38,10 +41,11 @@ pub async fn run(listener: TcpListener) -> anyhow::Result<()> {
     Ok(())
 }
 
-fn build_router() -> Router {
+fn build_router(connection_pool: PgPool) -> Router {
     Router::new()
         .route("/health_check", get(health_check))
         .route("/subscriptions", post(subscribe))
+        .with_state(connection_pool)
 }
 
 async fn health_check() -> impl IntoResponse {

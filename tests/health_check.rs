@@ -4,15 +4,19 @@ use sqlx::PgPool;
 use std::net::TcpListener;
 use zero2prod::run;
 
-#[tokio::test]
-async fn health_check_works() {
+struct TestApp {
+    address: String,
+}
+
+#[sqlx::test]
+async fn health_check_works(pool: PgPool) {
     // Arrange.
-    let address = spawn_app();
-    let address = format!("{address}/health_check");
+    let app = spawn_app(pool);
+    let endpoint = format!("{}/health_check", app.address);
     let client = reqwest::Client::new();
 
     // Act.
-    let response = client.get(&address).send().await.unwrap();
+    let response = client.get(&endpoint).send().await.unwrap();
 
     // Assert.
     assert!(response.status().is_success());
@@ -22,19 +26,14 @@ async fn health_check_works() {
 #[sqlx::test]
 async fn subscribe_returns_200_for_valid_form_data(pool: PgPool) {
     // Arrange.
-    // sqlx::migrate!()
-    //     .run(&pool)
-    //     .await
-    //     .expect("the migrations should run");
-
-    let address = spawn_app();
-    let address = format!("{address}/subscriptions");
+    let app = spawn_app(pool.clone());
+    let endpoint = format!("{}/subscriptions", app.address);
     let client = reqwest::Client::new();
 
     // Act.
     let body = "name=le%20guin&email=ursula_le_guin%40gmail.com";
     let response = client
-        .post(&address)
+        .post(&endpoint)
         .header("Content-Type", "application/x-www-form-urlencoded")
         .body(body)
         .send()
@@ -47,17 +46,17 @@ async fn subscribe_returns_200_for_valid_form_data(pool: PgPool) {
     let saved = sqlx::query!("SELECT email, name FROM subscriptions")
         .fetch_one(&pool)
         .await
-        .expect("the table should have at least 1 entry");
+        .expect("the entry should've been inserted");
 
     assert_eq!("ursula_le_guin@gmail.com", saved.email);
     assert_eq!("le guin", saved.name);
 }
 
-#[tokio::test]
-async fn subscribe_returns_422_when_data_is_missing() {
+#[sqlx::test]
+async fn subscribe_returns_422_when_data_is_missing(pool: PgPool) {
     // Arrange.
-    let address = spawn_app();
-    let address = format!("{address}/subscriptions");
+    let app = spawn_app(pool);
+    let endpoint = format!("{}/subscriptions", app.address);
     let client = reqwest::Client::new();
     let test_cases = vec![
         ("name=le%20guin", "missing the email"),
@@ -68,7 +67,7 @@ async fn subscribe_returns_422_when_data_is_missing() {
     for (invalid_body, error_message) in test_cases {
         // Act.
         let response = client
-            .post(&address)
+            .post(&endpoint)
             .header("Content-Type", "application/x-www-form-urlencoded")
             .body(invalid_body)
             .send()
@@ -85,13 +84,15 @@ async fn subscribe_returns_422_when_data_is_missing() {
     }
 }
 
-fn spawn_app() -> String {
+fn spawn_app(connection_pool: PgPool) -> TestApp {
     let listener = TcpListener::bind("127.0.0.1:0")
         .expect("the provided address should be valid");
     let port = listener.local_addr().unwrap().port();
-    let server = run(listener);
+    let server = run(listener, connection_pool);
 
     tokio::spawn(server);
 
-    format!("http://127.0.0.1:{port}")
+    TestApp {
+        address: format!("http://127.0.0.1:{port}"),
+    }
 }
