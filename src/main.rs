@@ -1,10 +1,18 @@
-use std::net::TcpListener;
-
 use sqlx::PgPool;
+use std::net::TcpListener;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use zero2prod::get_configuration;
 
 #[tokio::main]
 async fn main() {
+    tracing_subscriber::registry()
+        .with(
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| "zero2prod=debug,tower_http=debug".into()),
+        )
+        .with(tracing_subscriber::fmt::layer())
+        .init();
+
     let configuration =
         get_configuration().expect("app configuration should be present");
     let listener = {

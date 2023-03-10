@@ -12,6 +12,7 @@ use config::{Config, ConfigError};
 use serde::Deserialize;
 use sqlx::PgPool;
 use std::net::TcpListener;
+use tower_http::trace::TraceLayer;
 use uuid::Uuid;
 
 /// Run the server.
@@ -47,6 +48,7 @@ fn build_router(connection_pool: PgPool) -> Router {
     Router::new()
         .route("/health_check", get(health_check))
         .route("/subscriptions", post(subscribe))
+        .layer(TraceLayer::new_for_http())
         .with_state(connection_pool)
 }
 
