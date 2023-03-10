@@ -38,6 +38,7 @@ jobs:
           --features ${{ env.SQLX_FEATURES }}
           --no-default-features
           --locked
+          -y
       - name: Migrate database
         run: |
           sudo apt-get install libpq-dev -y
@@ -87,6 +88,7 @@ jobs:
           --features ${{ env.SQLX_FEATURES }}
           --no-default-features
           --locked
+          -y
       - name: Migrate database
         run: |
           sudo apt-get install libpq-dev -y
@@ -120,7 +122,7 @@ jobs:
         with:
           key: sqlx-${{ env.SQLX_VERSION }}
       - name: Install tarpaulin
-        run: ./cargo-binstall cargo-tarpaulin
+        run: ./cargo-binstall cargo-tarpaulin -y
       - name: Install sqlx-cli
         run:
           ./cargo-binstall sqlx-cli
@@ -128,6 +130,7 @@ jobs:
           --features ${{ env.SQLX_FEATURES }}
           --no-default-features
           --locked
+          -y
       - name: Migrate database
         run: sqlx database setup
       - name: Generate code coverage
