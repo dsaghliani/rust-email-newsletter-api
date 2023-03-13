@@ -1,8 +1,11 @@
 #![allow(clippy::unwrap_used)]
 
+use once_cell::sync::Lazy;
 use sqlx::PgPool;
 use std::net::TcpListener;
-use zero2prod::run;
+use zero2prod::{run, telemetry::init_subscriber};
+
+static TRACING: Lazy<()> = Lazy::new(init_subscriber);
 
 struct TestApp {
     address: String,
@@ -85,6 +88,8 @@ async fn subscribe_returns_422_when_data_is_missing(pool: PgPool) {
 }
 
 fn spawn_app(connection_pool: PgPool) -> TestApp {
+    Lazy::force(&TRACING);
+
     let listener = TcpListener::bind("127.0.0.1:0")
         .expect("the provided address should be valid");
     let port = listener.local_addr().unwrap().port();
