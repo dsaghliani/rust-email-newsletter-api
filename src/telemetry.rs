@@ -8,6 +8,6 @@ pub fn init_subscriber() {
             EnvFilter::try_from_default_env()
                 .unwrap_or_else(|_| "zero2prod=DEBUG,tower_http=DEBUG".into()),
         )
-        .with(fmt::layer())
+        .with(fmt::layer().event_format(fmt::format().pretty()))
         .init();
 }
