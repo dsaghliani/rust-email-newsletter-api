@@ -1,3 +1,4 @@
+use secrecy::ExposeSecret;
 use sqlx::PgPool;
 use std::net::TcpListener;
 use zero2prod::{configuration, telemetry::init_subscriber};
@@ -11,10 +12,11 @@ async fn main() {
     let listener = bind_listener(configuration.application_port);
 
     #[allow(clippy::unwrap_used)]
-    let connection_pool =
-        create_connection_pool(&configuration.database.connection_string())
-            .await
-            .unwrap();
+    let connection_pool = create_connection_pool(
+        configuration.database.connection_string().expose_secret(),
+    )
+    .await
+    .unwrap();
 
     #[allow(clippy::unwrap_used)]
     zero2prod::run(listener, connection_pool).await.unwrap();
