@@ -26,11 +26,6 @@ async fn main() {
         PgPool::connect(&connection_string).await.unwrap()
     };
 
-    // sqlx::migrate!()
-    //     .run(&connection_pool)
-    //     .await
-    //     .expect("the migrations should be valid");
-
     #[allow(clippy::unwrap_used)]
     zero2prod::run(listener, connection_pool).await.unwrap();
 }

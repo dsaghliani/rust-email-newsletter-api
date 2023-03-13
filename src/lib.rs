@@ -27,6 +27,11 @@ pub async fn run(
     listener: TcpListener,
     connection_pool: PgPool,
 ) -> anyhow::Result<()> {
+    sqlx::migrate!()
+        .run(&connection_pool)
+        .await
+        .expect("the migrations should be valid");
+
     let router = build_router(connection_pool);
 
     Server::from_tcp(listener)
