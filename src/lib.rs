@@ -13,6 +13,7 @@ use axum::{
 use routes::{health_check::health_check, subscription::subscribe};
 use sqlx::PgPool;
 use std::net::TcpListener;
+use telemetry::RequestIdMakeSpan;
 use tower_http::trace::TraceLayer;
 
 /// Run the server.
@@ -53,6 +54,6 @@ fn build_router(connection_pool: PgPool) -> Router {
     Router::new()
         .route("/health_check", get(health_check))
         .route("/subscriptions", post(subscribe))
-        .layer(TraceLayer::new_for_http())
+        .layer(TraceLayer::new_for_http().make_span_with(RequestIdMakeSpan::new()))
         .with_state(connection_pool)
 }
