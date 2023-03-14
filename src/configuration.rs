@@ -92,7 +92,7 @@ pub struct DatabaseSettings {
     pub password: Secret<String>,
     pub port: u16,
     pub host: String,
-    pub database_name: String,
+    pub name: String,
 }
 
 impl DatabaseSettings {
@@ -104,7 +104,7 @@ impl DatabaseSettings {
             self.password.expose_secret(),
             self.host,
             self.port,
-            self.database_name
+            self.name
         );
 
         Secret::new(connection_string)
