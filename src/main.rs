@@ -12,10 +12,9 @@ async fn main() {
     let listener = bind_listener(configuration.application_port);
 
     #[allow(clippy::unwrap_used)]
-    let connection_pool = create_connection_pool(
+    let connection_pool = PgPool::connect_lazy(
         configuration.database.connection_string().expose_secret(),
     )
-    .await
     .unwrap();
 
     #[allow(clippy::unwrap_used)]
@@ -25,8 +24,4 @@ async fn main() {
 fn bind_listener(port: u16) -> TcpListener {
     let address = format!("127.0.0.1:{port}");
     TcpListener::bind(address).expect("the provided address should be valid")
-}
-
-async fn create_connection_pool(connection_string: &str) -> sqlx::Result<PgPool> {
-    PgPool::connect(connection_string).await
 }
