@@ -3,7 +3,6 @@ builder = "dockerfile"
 watchPatterns = ["src/**"]
 
 [deploy]
-startCommand = "docker run -p 8000:8000 zero2prod"
 healthcheckPath = "/health"
 healthcheckTimeout = 30
 restartPolicyType = "on_failure"
