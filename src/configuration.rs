@@ -1,8 +1,8 @@
-use std::env;
-
 use config::{Config, ConfigError};
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
+use sqlx::postgres::PgConnectOptions;
+use std::env;
 
 /// Load the configuration for the app.
 ///
@@ -98,16 +98,12 @@ pub struct DatabaseSettings {
 
 impl DatabaseSettings {
     #[must_use]
-    pub fn connection_string(&self) -> Secret<String> {
-        let connection_string = format!(
-            "postgres://{}:{}@{}:{}/{}",
-            self.username,
-            self.password.expose_secret(),
-            self.host,
-            self.port,
-            self.name
-        );
-
-        Secret::new(connection_string)
+    pub fn connect_options(&self) -> PgConnectOptions {
+        PgConnectOptions::new()
+            .host(&self.host)
+            .username(&self.username)
+            .password(self.password.expose_secret())
+            .port(self.port)
+            .database(&self.name)
     }
 }
