@@ -1,0 +1,11 @@
+[build]
+builder = "dockerfile"
+buildCommand = "docker build --tag zero2prod --file Dockerfile ."
+watchPatterns = ["src/**"]
+
+[deploy]
+startCommand = "docker run -p 8000:8000 zero2prod"
+healthcheckPath = "/health"
+healthcheckTimeout = 30
+restartPolicyType = "on_failure"
+restartPolicyMaxRetries = 5
