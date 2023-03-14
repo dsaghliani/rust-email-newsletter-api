@@ -5,7 +5,7 @@ pub mod telemetry;
 
 mod routes;
 
-use anyhow::{anyhow, Context};
+use anyhow::Context;
 use axum::{
     routing::{get, post},
     Router, Server,
@@ -15,6 +15,7 @@ use sqlx::PgPool;
 use std::net::TcpListener;
 use telemetry::RequestIdMakeSpan;
 use tower_http::trace::TraceLayer;
+use tracing::error;
 
 /// Run the server.
 ///
@@ -28,10 +29,7 @@ pub async fn run(
     listener: TcpListener,
     connection_pool: PgPool,
 ) -> anyhow::Result<()> {
-    sqlx::migrate!()
-        .run(&connection_pool)
-        .await
-        .context("failed to run the migrations from `zero2prod::run`")?;
+    run_migrations(&connection_pool).await?;
 
     let router = build_router(connection_pool);
 
@@ -40,6 +38,18 @@ pub async fn run(
         .serve(router.into_make_service())
         .await
         .context("something went wrong running the server")?;
+
+    Ok(())
+}
+
+#[tracing::instrument(name = "Running migrations")]
+async fn run_migrations(connection_pool: &PgPool) -> sqlx::Result<()> {
+    sqlx::migrate!()
+        .run(connection_pool)
+        .await
+        .map_err(|error| {
+            error!("Failed to run migrations: {error:?}");
+            error
         })?;
 
     Ok(())
