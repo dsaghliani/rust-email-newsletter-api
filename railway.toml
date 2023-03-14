@@ -1,6 +1,5 @@
 [build]
 builder = "dockerfile"
-buildCommand = "docker build --tag zero2prod --file Dockerfile ."
 watchPatterns = ["src/**"]
 
 [deploy]
