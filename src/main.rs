@@ -18,7 +18,7 @@ async fn main() {
     );
 
     let connection_pool = PgPoolOptions::new()
-        .acquire_timeout(Duration::from_secs(5))
+        .acquire_timeout(Duration::from_secs(30))
         .connect_lazy_with(configuration.database.connect_options());
 
     #[allow(clippy::unwrap_used)]
