@@ -41,6 +41,7 @@ pub fn build() -> Result<Settings, ConfigError> {
             config::File::from(configuration_directory.join(environment.as_str()))
                 .required(true),
         )
+        .add_source(config::Environment::with_prefix("app").separator("__"))
         .build()?
         .try_deserialize()
 }
