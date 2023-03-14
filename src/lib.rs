@@ -36,15 +36,10 @@ pub async fn run(
     let router = build_router(connection_pool);
 
     Server::from_tcp(listener)
-        .map_err(|err| {
-            anyhow!(
-                "Couldn't create the server from the provided `TcpListener`: {err}"
-            )
-        })?
+        .context("couldn't create the server from the provided `TcpListener`")?
         .serve(router.into_make_service())
         .await
-        .map_err(|err| {
-            anyhow!("Something went wrong running the server: {err}")
+        .context("something went wrong running the server")?;
         })?;
 
     Ok(())
