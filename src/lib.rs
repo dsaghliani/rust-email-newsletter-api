@@ -5,7 +5,7 @@ pub mod telemetry;
 
 mod routes;
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use axum::{
     routing::{get, post},
     Router, Server,
@@ -31,7 +31,7 @@ pub async fn run(
     sqlx::migrate!()
         .run(&connection_pool)
         .await
-        .expect("the migrations should be valid");
+        .context("failed to run the migrations from `zero2prod::run`")?;
 
     let router = build_router(connection_pool);
 
