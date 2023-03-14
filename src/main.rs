@@ -9,7 +9,10 @@ async fn main() {
 
     let configuration =
         configuration::build().expect("app configuration should be present");
-    let listener = bind_listener(configuration.application_port);
+    let listener = bind_listener(
+        &configuration.application.host,
+        configuration.application.port,
+    );
 
     #[allow(clippy::unwrap_used)]
     let connection_pool = PgPool::connect_lazy(
@@ -21,7 +24,7 @@ async fn main() {
     zero2prod::run(listener, connection_pool).await.unwrap();
 }
 
-fn bind_listener(port: u16) -> TcpListener {
-    let address = format!("127.0.0.1:{port}");
+fn bind_listener(host: &str, port: u16) -> TcpListener {
+    let address = format!("{host}:{port}");
     TcpListener::bind(address).expect("the provided address should be valid")
 }

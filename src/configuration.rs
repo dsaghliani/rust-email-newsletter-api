@@ -21,8 +21,14 @@ pub fn build() -> Result<Settings, ConfigError> {
 
 #[derive(Deserialize, Debug)]
 pub struct Settings {
+    pub application: ApplicationSettings,
     pub database: DatabaseSettings,
-    pub application_port: u16,
+}
+
+#[derive(Deserialize, Debug)]
+pub struct ApplicationSettings {
+    pub port: u16,
+    pub host: String,
 }
 
 #[derive(Deserialize, Debug)]
