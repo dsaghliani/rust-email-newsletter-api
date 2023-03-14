@@ -15,7 +15,7 @@ use sqlx::PgPool;
 use std::net::TcpListener;
 use telemetry::RequestIdMakeSpan;
 use tower_http::trace::TraceLayer;
-use tracing::error;
+use tracing::{error, info};
 
 /// Run the server.
 ///
@@ -32,6 +32,13 @@ pub async fn run(
     run_migrations(&connection_pool).await?;
 
     let router = build_router(connection_pool);
+
+    info!(
+        "Listening on {}",
+        listener
+            .local_addr()
+            .expect("the listener's address should be available")
+    );
 
     Server::from_tcp(listener)
         .context("couldn't create the server from the provided `TcpListener`")?
