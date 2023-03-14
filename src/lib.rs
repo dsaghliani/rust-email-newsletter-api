@@ -55,7 +55,7 @@ async fn run_migrations(connection_pool: &PgPool) -> sqlx::Result<()> {
         .run(connection_pool)
         .await
         .map_err(|error| {
-            error!("Failed to run migrations: {error:?}");
+            error!("Failed to run migrations: {error}");
             error
         })?;
 

@@ -53,7 +53,7 @@ async fn insert_subscriber(
     // In the future, when it has stabilized, this can be replaced with
     // `Result::inspect_err`.
     .map_err(|error| {
-        error!("Faild to execute query: {error:?}");
+        error!("Faild to execute query: {error}");
         error
     })?;
 
