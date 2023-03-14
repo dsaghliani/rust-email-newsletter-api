@@ -1,5 +1,6 @@
 use sqlx::postgres::PgPoolOptions;
 use std::{net::TcpListener, time::Duration};
+use tracing::debug;
 use zero2prod::{configuration, telemetry::init_subscriber};
 
 #[tokio::main]
@@ -8,6 +9,9 @@ async fn main() {
 
     let configuration =
         configuration::build().expect("app configuration should be present");
+
+    debug!("Detected the following configuration: {configuration:?}");
+
     let listener = bind_listener(
         &configuration.application.host,
         configuration.application.port,
