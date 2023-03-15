@@ -5,4 +5,4 @@ database:
   port: 5432
   username: "postgres"
   password: "postgres"
-  name: "zero2prod_dev"
+  name: "newsletter_dev"

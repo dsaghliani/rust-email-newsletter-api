@@ -935,6 +935,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "newsletter"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "config",
+ "once_cell",
+ "reqwest",
+ "secrecy",
+ "serde",
+ "sqlx",
+ "tokio",
+ "tower-http",
+ "tracing",
+ "tracing-bunyan-formatter",
+ "tracing-subscriber",
+ "uuid",
+]
+
+[[package]]
 name = "nom"
 version = "7.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2404,26 +2424,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "56c1936c4cc7a1c9ab21a1ebb602eb942ba868cbd44a99cb7cdc5892335e1c85"
 dependencies = [
  "linked-hash-map",
-]
-
-[[package]]
-name = "zero2prod"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "config",
- "once_cell",
- "reqwest",
- "secrecy",
- "serde",
- "sqlx",
- "tokio",
- "tower-http",
- "tracing",
- "tracing-bunyan-formatter",
- "tracing-subscriber",
- "uuid",
 ]
 
 [[package]]

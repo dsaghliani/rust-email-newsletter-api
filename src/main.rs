@@ -1,7 +1,7 @@
 use sqlx::postgres::PgPoolOptions;
 use std::{net::TcpListener, time::Duration};
 use tracing::debug;
-use zero2prod::{configuration, telemetry::init_subscriber};
+use newsletter::{configuration, telemetry::init_subscriber};
 
 #[tokio::main]
 async fn main() {
@@ -22,7 +22,7 @@ async fn main() {
         .connect_lazy_with(configuration.database.connect_options());
 
     #[allow(clippy::unwrap_used)]
-    zero2prod::run(listener, connection_pool).await.unwrap();
+    newsletter::run(listener, connection_pool).await.unwrap();
 }
 
 fn bind_listener(host: &str, port: u16) -> TcpListener {

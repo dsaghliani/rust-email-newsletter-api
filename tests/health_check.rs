@@ -3,7 +3,7 @@
 use once_cell::sync::Lazy;
 use sqlx::PgPool;
 use std::net::TcpListener;
-use zero2prod::{run, telemetry::init_subscriber};
+use newsletter::{run, telemetry::init_subscriber};
 
 static TRACING: Lazy<()> = Lazy::new(init_subscriber);
 
