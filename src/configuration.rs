@@ -32,7 +32,7 @@ pub fn build() -> Result<Settings, ConfigError> {
 
     // `config` will look for a file named, "configuration," in the top-level
     // directory with any extension it knows how to parse: yaml, json, toml, etc.
-    Config::builder()
+    let mut settings: Settings = Config::builder()
         .add_source(
             config::File::from(configuration_directory.join("base"))
                 .required(true),
@@ -43,7 +43,15 @@ pub fn build() -> Result<Settings, ConfigError> {
         )
         .add_source(config::Environment::with_prefix("app").separator("__"))
         .build()?
-        .try_deserialize()
+        .try_deserialize()?;
+
+    // Railway generates a `PORT` env. variable at runtime. Read it.
+    if let Ok(port) = env::var("PORT") {
+        settings.application.port =
+            port.parse().expect("the port should be a valid number");
+    }
+
+    Ok(settings)
 }
 
 enum AppEnvironment {
