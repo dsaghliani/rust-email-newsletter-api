@@ -1,5 +1,6 @@
-use sqlx::PgPool;
-use std::net::TcpListener;
+use sqlx::postgres::PgPoolOptions;
+use std::{net::TcpListener, time::Duration};
+use tracing::debug;
 use zero2prod::{configuration, telemetry::init_subscriber};
 
 #[tokio::main]
@@ -8,23 +9,23 @@ async fn main() {
 
     let configuration =
         configuration::build().expect("app configuration should be present");
-    let listener = bind_listener(configuration.application_port);
 
-    #[allow(clippy::unwrap_used)]
-    let connection_pool =
-        create_connection_pool(&configuration.database.connection_string())
-            .await
-            .unwrap();
+    debug!("Detected the following configuration: {configuration:?}");
+
+    let listener = bind_listener(
+        &configuration.application.host,
+        configuration.application.port,
+    );
+
+    let connection_pool = PgPoolOptions::new()
+        .acquire_timeout(Duration::from_secs(30))
+        .connect_lazy_with(configuration.database.connect_options());
 
     #[allow(clippy::unwrap_used)]
     zero2prod::run(listener, connection_pool).await.unwrap();
 }
 
-fn bind_listener(port: u16) -> TcpListener {
-    let address = format!("127.0.0.1:{port}");
+fn bind_listener(host: &str, port: u16) -> TcpListener {
+    let address = format!("{host}:{port}");
     TcpListener::bind(address).expect("the provided address should be valid")
-}
-
-async fn create_connection_pool(connection_string: &str) -> sqlx::Result<PgPool> {
-    PgPool::connect(connection_string).await
 }

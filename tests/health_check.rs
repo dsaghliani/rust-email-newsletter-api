@@ -12,10 +12,10 @@ struct TestApp {
 }
 
 #[sqlx::test]
-async fn health_check_works(pool: PgPool) {
+async fn health_works(pool: PgPool) {
     // Arrange.
     let app = spawn_app(pool);
-    let endpoint = format!("{}/health_check", app.address);
+    let endpoint = format!("{}/health", app.address);
     let client = reqwest::Client::new();
 
     // Act.

@@ -5,15 +5,17 @@ pub mod telemetry;
 
 mod routes;
 
-use anyhow::anyhow;
+use anyhow::Context;
 use axum::{
     routing::{get, post},
     Router, Server,
 };
-use routes::{health_check::health_check, subscription::subscribe};
+use routes::{health_check::health, subscription::subscribe};
 use sqlx::PgPool;
 use std::net::TcpListener;
+use telemetry::RequestIdMakeSpan;
 use tower_http::trace::TraceLayer;
+use tracing::{error, info};
 
 /// Run the server.
 ///
@@ -27,23 +29,34 @@ pub async fn run(
     listener: TcpListener,
     connection_pool: PgPool,
 ) -> anyhow::Result<()> {
-    sqlx::migrate!()
-        .run(&connection_pool)
-        .await
-        .expect("the migrations should be valid");
+    run_migrations(&connection_pool).await?;
 
     let router = build_router(connection_pool);
 
+    info!(
+        "Listening on {}",
+        listener
+            .local_addr()
+            .expect("the listener's address should be available")
+    );
+
     Server::from_tcp(listener)
-        .map_err(|err| {
-            anyhow!(
-                "Couldn't create the server from the provided `TcpListener`: {err}"
-            )
-        })?
+        .context("couldn't create the server from the provided `TcpListener`")?
         .serve(router.into_make_service())
         .await
-        .map_err(|err| {
-            anyhow!("Something went wrong running the server: {err}")
+        .context("something went wrong running the server")?;
+
+    Ok(())
+}
+
+#[tracing::instrument(name = "Running migrations")]
+async fn run_migrations(connection_pool: &PgPool) -> sqlx::Result<()> {
+    sqlx::migrate!()
+        .run(connection_pool)
+        .await
+        .map_err(|error| {
+            error!("Failed to run migrations: {error}");
+            error
         })?;
 
     Ok(())
@@ -51,8 +64,8 @@ pub async fn run(
 
 fn build_router(connection_pool: PgPool) -> Router {
     Router::new()
-        .route("/health_check", get(health_check))
+        .route("/health", get(health))
         .route("/subscriptions", post(subscribe))
-        .layer(TraceLayer::new_for_http())
+        .layer(TraceLayer::new_for_http().make_span_with(RequestIdMakeSpan::new()))
         .with_state(connection_pool)
 }
