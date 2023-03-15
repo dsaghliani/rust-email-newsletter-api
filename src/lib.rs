@@ -3,6 +3,8 @@
 pub mod configuration;
 pub mod telemetry;
 
+mod domain;
+mod extractors;
 mod routes;
 
 use anyhow::Context;

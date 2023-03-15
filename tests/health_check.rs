@@ -87,6 +87,44 @@ async fn subscribe_returns_422_when_data_is_missing(pool: PgPool) {
     }
 }
 
+#[sqlx::test]
+async fn subscribe_returns_422_when_fields_are_present_but_invalid(pool: PgPool) {
+    // Arrange.
+    let app = spawn_app(pool);
+    let endpoint = format!("{}/subscriptions", app.address);
+    let client = reqwest::Client::new();
+    let test_cases = vec![
+        (
+            "name=&email=ursula_le_guin%40gmail.com",
+            "the name is empty",
+        ),
+        ("name=le%20guin&email=", "the email is empty"),
+        (
+            "name=le%20guin&email=definitely-not-an-email",
+            "the email is invalid",
+        ),
+    ];
+
+    for (invalid_body, error_message) in test_cases {
+        // Act.
+        let response = client
+            .post(&endpoint)
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .body(invalid_body)
+            .send()
+            .await
+            .unwrap();
+
+        // Assert.
+        assert_eq!(
+            422,
+            response.status().as_u16(),
+            "The API did not return a `422: Unprocessable Entity` when the payload was: \
+            {error_message}"
+        );
+    }
+}
+
 fn spawn_app(connection_pool: PgPool) -> TestApp {
     Lazy::force(&TRACING);
 

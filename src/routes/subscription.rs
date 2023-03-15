@@ -1,28 +1,22 @@
 #![allow(clippy::module_name_repetitions)]
 
-use axum::{extract::State, http::StatusCode, response::IntoResponse, Form};
-use serde::Deserialize;
+use crate::{domain::NewSubscriber, extractors::ValidatedForm};
+use axum::{extract::State, http::StatusCode, response::IntoResponse};
 use sqlx::PgPool;
 use tracing::error;
 use uuid::Uuid;
 
-#[derive(Deserialize)]
-pub struct SubscriptionData {
-    name: String,
-    email: String,
-}
-
 #[tracing::instrument(
     name = "Adding a new subscriber",
-    skip(connection_pool, subscription_data),
+    skip_all,
     fields(
-        subscriber_email = %subscription_data.email,
-        subscriber_name = %subscription_data.name,
+        subscriber_email = %subscription_data.email.as_ref(),
+        subscriber_name = %subscription_data.name.as_ref(),
     )
 )]
 pub async fn subscribe(
     State(connection_pool): State<PgPool>,
-    Form(subscription_data): Form<SubscriptionData>,
+    ValidatedForm(subscription_data): ValidatedForm<NewSubscriber>,
 ) -> impl IntoResponse {
     if (insert_subscriber(&connection_pool, &subscription_data).await).is_ok() {
         StatusCode::OK
@@ -37,7 +31,7 @@ pub async fn subscribe(
 )]
 async fn insert_subscriber(
     connection_pool: &PgPool,
-    subscription_data: &SubscriptionData,
+    subscription_data: &NewSubscriber,
 ) -> sqlx::Result<()> {
     sqlx::query!(
         r#"
@@ -45,8 +39,8 @@ async fn insert_subscriber(
         VALUES ($1, $2, $3)
         "#,
         Uuid::new_v4(),
-        subscription_data.email,
-        subscription_data.name
+        subscription_data.email.as_ref(),
+        subscription_data.name.as_ref()
     )
     .execute(connection_pool)
     .await
