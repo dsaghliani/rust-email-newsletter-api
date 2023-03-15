@@ -4,20 +4,12 @@ pub use subscriber_name::SubscriberName;
 
 mod subscriber_email {
     use serde::Deserialize;
-    use validator::{Validate, ValidationErrors};
+    use validator::Validate;
 
     #[derive(Debug, Deserialize, Validate)]
     pub struct SubscriberEmail {
         #[validate(email)]
         email: String,
-    }
-
-    impl SubscriberEmail {
-        pub fn parse(email: String) -> Result<Self, ValidationErrors> {
-            let subscriber_email = Self { email };
-            subscriber_email.validate()?;
-            Ok(subscriber_email)
-        }
     }
 
     impl AsRef<str> for SubscriberEmail {
@@ -33,6 +25,7 @@ mod subscriber_email {
         use k9::assert_err;
         use quickcheck_macros::quickcheck;
         use rand::{rngs::StdRng, SeedableRng};
+        use validator::Validate;
 
         #[derive(Clone, Debug)]
         struct ValidEmailFixture(pub String);
@@ -47,33 +40,33 @@ mod subscriber_email {
 
         #[quickcheck]
         fn valid_emails_are_parsed_successfully(
-            ValidEmailFixture(valid_email): ValidEmailFixture,
+            ValidEmailFixture(email): ValidEmailFixture,
         ) -> bool {
-            SubscriberEmail::parse(valid_email).is_ok()
+            SubscriberEmail { email }.validate().is_ok()
         }
 
         #[test]
         fn empty_string_is_rejected() {
             let email = String::new();
-            assert_err!(SubscriberEmail::parse(email));
+            assert_err!(SubscriberEmail { email }.validate());
         }
 
         #[test]
         fn email_missing_at_symbol_is_rejected() {
             let email = "ursuladomain.com".to_string();
-            assert_err!(SubscriberEmail::parse(email));
+            assert_err!(SubscriberEmail { email }.validate());
         }
 
         #[test]
         fn email_missing_subject_is_rejected() {
             let email = "@domain.com".to_string();
-            assert_err!(SubscriberEmail::parse(email));
+            assert_err!(SubscriberEmail { email }.validate());
         }
     }
 }
 mod subscriber_name {
     use serde::Deserialize;
-    use validator::{Validate, ValidationError, ValidationErrors};
+    use validator::{Validate, ValidationError};
 
     #[derive(Debug, Deserialize, Validate)]
     pub struct SubscriberName {
@@ -110,14 +103,6 @@ mod subscriber_name {
         Ok(())
     }
 
-    impl SubscriberName {
-        pub fn parse(name: String) -> Result<Self, ValidationErrors> {
-            let subscriber_name = Self { name };
-            subscriber_name.validate()?;
-            Ok(subscriber_name)
-        }
-    }
-
     impl AsRef<str> for SubscriberName {
         fn as_ref(&self) -> &str {
             &self.name
@@ -128,43 +113,44 @@ mod subscriber_name {
     mod tests {
         use super::SubscriberName;
         use k9::{assert_err, assert_ok};
+        use validator::Validate;
 
         #[test]
         fn a_256_grapheme_long_name_is_valid() {
             let name = "a".repeat(256);
-            assert_ok!(SubscriberName::parse(name));
+            assert_ok!(SubscriberName { name }.validate());
         }
 
         #[test]
         fn name_longer_than_256_graphemes_is_rejected() {
             let name = "a".repeat(257);
-            assert_err!(SubscriberName::parse(name));
+            assert_err!(SubscriberName { name }.validate());
         }
 
         #[test]
         fn whitespace_only_names_are_rejected() {
             let name = " ".to_string();
-            assert_err!(SubscriberName::parse(name));
+            assert_err!(SubscriberName { name }.validate());
         }
 
         #[test]
         fn empty_string_is_rejected() {
             let name = String::new();
-            assert_err!(SubscriberName::parse(name));
+            assert_err!(SubscriberName { name }.validate());
         }
 
         #[test]
         fn names_containing_an_invalid_character_are_rejected() {
             for name in &['/', '(', ')', '"', '<', '>', '\\', '{', '}'] {
                 let name = name.to_string();
-                assert_err!(SubscriberName::parse(name));
+                assert_err!(SubscriberName { name }.validate());
             }
         }
 
         #[test]
         fn valid_name_is_parsed_successfully() {
             let name = "Ursula Le Guin".to_string();
-            assert_ok!(SubscriberName::parse(name));
+            assert_ok!(SubscriberName { name }.validate());
         }
     }
 }
@@ -174,7 +160,7 @@ mod new_subscriber {
     use serde::Deserialize;
     use validator::Validate;
 
-    #[derive(Deserialize, Validate)]
+    #[derive(Debug, Deserialize, Validate)]
     pub struct NewSubscriber {
         #[serde(flatten)]
         #[validate]
