@@ -29,7 +29,14 @@ mod subscriber_email {
     #[cfg(test)]
     mod tests {
         use super::SubscriberEmail;
-        use k9::assert_err;
+        use fake::{faker::internet::en::SafeEmail, Fake};
+        use k9::{assert_err, assert_ok};
+
+        #[test]
+        fn valid_emails_are_parsed_successfully() {
+            let email = SafeEmail().fake();
+            assert_ok!(SubscriberEmail::parse(email));
+        }
 
         #[test]
         fn empty_string_is_rejected() {
