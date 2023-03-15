@@ -1,10 +1,10 @@
-## Before Your First Commit
+## The `pre-commit` Git Hook
 
 This crate relies on SQLx's offline mode in order to compile in CI. As a result, every time a SQLx query is created, deleted, or modified in some way, `cargo sqlx prepare -- --all-targets --all-features` has to be run to create or update the `sqlx-data.json` file at the top-level directory.
 
-(Naturally, this requires that `sqlx-cli` is installed. Head to https://github.com/launchbadge/sqlx/blob/main/sqlx-cli/README.md to do so.)
+(Naturally, this requires that `sqlx-cli` is installed. Instructions for that are located at: https://github.com/launchbadge/sqlx/blob/main/sqlx-cli/README.md.)
 
-Since that's easy to forget, I made a Git hook that runs the command before every commit. Unfortunately, client-side hooks are difficult to share, so if you've just cloned the repository, you'll have to manually create the file. Add the following code to `.git/hooks/pre-commit`:
+Since that's easy to forget, I made a Git hook that runs the command before every commit. Unfortunately, client-side hooks are difficult to share, so everyone who clones the repository has to manually create the file. Add the following code to `.git/hooks/pre-commit`:
 
 ```sh
 #!/bin/sh
@@ -21,4 +21,4 @@ cargo sqlx prepare -- --all-targets --all-features
 git add sqlx-data.json
 ```
 
-Git hooks need to be executable, so don't forget to run `chmod +x .git/hooks/pre-commit` (or whatever your OS's equivalent is).
+Git hooks need to be executable, so don't forget to run `chmod +x .git/hooks/pre-commit` (or the Windows/Mac equivalent).
