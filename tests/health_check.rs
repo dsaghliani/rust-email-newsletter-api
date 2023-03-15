@@ -1,9 +1,9 @@
 #![allow(clippy::unwrap_used)]
 
+use newsletter::{run, telemetry::init_subscriber};
 use once_cell::sync::Lazy;
 use sqlx::PgPool;
 use std::net::TcpListener;
-use newsletter::{run, telemetry::init_subscriber};
 
 static TRACING: Lazy<()> = Lazy::new(init_subscriber);
 

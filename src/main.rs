@@ -1,7 +1,7 @@
+use newsletter::{configuration, telemetry::init_subscriber};
 use sqlx::postgres::PgPoolOptions;
 use std::{net::TcpListener, time::Duration};
 use tracing::debug;
-use newsletter::{configuration, telemetry::init_subscriber};
 
 #[tokio::main]
 async fn main() {
