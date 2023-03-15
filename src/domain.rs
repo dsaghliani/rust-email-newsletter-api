@@ -4,12 +4,20 @@ pub use subscriber_name::SubscriberName;
 
 mod subscriber_email {
     use serde::Deserialize;
-    use validator::Validate;
+    use validator::{Validate, ValidationErrors};
 
-    #[derive(Deserialize, Validate)]
+    #[derive(Debug, Deserialize, Validate)]
     pub struct SubscriberEmail {
         #[validate(email)]
         email: String,
+    }
+
+    impl SubscriberEmail {
+        pub fn parse(email: String) -> Result<Self, ValidationErrors> {
+            let subscriber_email = Self { email };
+            subscriber_email.validate()?;
+            Ok(subscriber_email)
+        }
     }
 
     impl AsRef<str> for SubscriberEmail {
@@ -19,7 +27,28 @@ mod subscriber_email {
     }
 
     #[cfg(test)]
-    mod tests {}
+    mod tests {
+        use super::SubscriberEmail;
+        use k9::assert_err;
+
+        #[test]
+        fn empty_string_is_rejected() {
+            let email = String::new();
+            assert_err!(SubscriberEmail::parse(email));
+        }
+
+        #[test]
+        fn email_missing_at_symbol_is_rejected() {
+            let email = "ursuladomain.com".to_string();
+            assert_err!(SubscriberEmail::parse(email));
+        }
+
+        #[test]
+        fn email_missing_subject_is_rejected() {
+            let email = "@domain.com".to_string();
+            assert_err!(SubscriberEmail::parse(email));
+        }
+    }
 }
 mod subscriber_name {
     use serde::Deserialize;
