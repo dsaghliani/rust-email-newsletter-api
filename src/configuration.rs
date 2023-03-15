@@ -16,7 +16,7 @@ use std::env;
 /// # Panics
 ///
 /// Will panic if the `APP_ENVIRONMENT` environment variable couldn't be detected
-/// or parsed.
+/// or parsed, or if the `PORT` variable is detected and couldn't be parsed.
 #[allow(clippy::unwrap_used)]
 pub fn build() -> Result<Settings, ConfigError> {
     // The configuration files should be located inside the "configuration"
@@ -45,7 +45,8 @@ pub fn build() -> Result<Settings, ConfigError> {
         .build()?
         .try_deserialize()?;
 
-    // Railway generates a `PORT` env. variable at runtime. Read it.
+    // The `PORT` env. variable is injected at runtime by most hosting providers.
+    // Read it if it exists.
     if let Ok(port) = env::var("PORT") {
         settings.application.port =
             port.parse().expect("the port should be a valid number");
