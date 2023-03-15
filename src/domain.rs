@@ -25,7 +25,7 @@ mod subscriber_name {
     use serde::Deserialize;
     use validator::{Validate, ValidationError, ValidationErrors};
 
-    #[derive(Deserialize, Debug, Validate)]
+    #[derive(Debug, Deserialize, Validate)]
     pub struct SubscriberName {
         #[validate(
             length(min = 1, max = 256),
