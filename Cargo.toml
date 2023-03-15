@@ -33,6 +33,9 @@ validator = { version = "0.16.0", features = ["derive"] }
 fake = "2.5.0"
 k9 = "0.11.6"
 once_cell = "1.17.1"
+quickcheck = "1.0.3"
+quickcheck_macros = "1.0.0"
+rand = "0.8.5"
 reqwest = "0.11.14"
 
 [profile.dev.package.sqlx-macros]
