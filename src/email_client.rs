@@ -100,8 +100,12 @@ mod tests {
         },
         Fake, Faker,
     };
+    use matchers::email_body_matches;
     use secrecy::Secret;
-    use wiremock::{matchers::any, Mock, MockServer, ResponseTemplate};
+    use wiremock::{
+        matchers::{header, header_exists, method, path},
+        Mock, MockServer, ResponseTemplate,
+    };
 
     #[tokio::test]
     async fn send_email_fires_request_to_base_url() {
@@ -112,7 +116,11 @@ mod tests {
             EmailClient::new(sender, mock_server.uri(), Secret::new(Faker.fake()))
         };
 
-        Mock::given(any())
+        Mock::given(header_exists("Authorization"))
+            .and(header("Content-Type", "application/json"))
+            .and(path("/v3/mail/send"))
+            .and(method("POST"))
+            .and(email_body_matches())
             .respond_with(ResponseTemplate::new(200))
             .expect(1)
             .mount(&mock_server)
@@ -131,5 +139,27 @@ mod tests {
         // Assertion is done automatically by the `MockServer`: if it doesn't
         // receive the request(s) as specified by `Mock::given(...)...`, it'll
         // panic in its `drop()` method.
+    }
+
+    mod matchers {
+        pub const fn email_body_matches() -> SendEmailBodyMatcher {
+            SendEmailBodyMatcher
+        }
+
+        pub struct SendEmailBodyMatcher;
+
+        impl wiremock::Match for SendEmailBodyMatcher {
+            fn matches(&self, request: &wiremock::Request) -> bool {
+                serde_json::from_slice(&request.body).map_or(
+                    false,
+                    |body: serde_json::Value| {
+                        body.get("personalizations").is_some()
+                            && body.get("from").is_some()
+                            && body.get("subject").is_some()
+                            && body.get("content").is_some()
+                    },
+                )
+            }
+        }
     }
 }
