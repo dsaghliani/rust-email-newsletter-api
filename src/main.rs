@@ -5,7 +5,7 @@ use tracing::debug;
 
 #[tokio::main]
 async fn main() {
-    init_subscriber();
+    init_subscriber(std::io::stdout);
 
     let configuration =
         configuration::build().expect("app configuration should be present");

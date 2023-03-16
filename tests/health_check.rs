@@ -7,7 +7,13 @@ use once_cell::sync::Lazy;
 use sqlx::PgPool;
 use std::net::TcpListener;
 
-static TRACING: Lazy<()> = Lazy::new(init_subscriber);
+static TRACING: Lazy<()> = Lazy::new(|| {
+    if std::env::var("TEST_LOG").is_ok() {
+        init_subscriber(std::io::stdout);
+    } else {
+        init_subscriber(std::io::sink);
+    }
+});
 
 struct TestApp {
     address: String,
