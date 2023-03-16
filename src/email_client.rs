@@ -22,13 +22,14 @@ impl EmailClient {
         sender: SubscriberEmail,
         base_url: String,
         authorization_token: Secret<String>,
+        timeout: Duration,
     ) -> Self {
         Self {
             sender,
             base_url,
             authorization_token,
             http_client: reqwest::Client::builder()
-                .timeout(Duration::from_secs(10))
+                .timeout(timeout)
                 .build()
                 .unwrap(),
         }
@@ -203,6 +204,8 @@ mod tests {
     }
 
     mod helpers {
+        use std::time::Duration;
+
         use fake::{
             faker::{
                 internet::en::SafeEmail,
@@ -228,7 +231,12 @@ mod tests {
         }
 
         pub fn email_client(base_url: String) -> EmailClient {
-            EmailClient::new(email(), base_url, Secret::new(Faker.fake()))
+            EmailClient::new(
+                email(),
+                base_url,
+                Secret::new(Faker.fake()),
+                Duration::from_millis(200),
+            )
         }
     }
 

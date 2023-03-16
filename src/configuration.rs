@@ -3,7 +3,7 @@ use config::{Config, ConfigError};
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
 use sqlx::{postgres::PgConnectOptions, ConnectOptions};
-use std::env;
+use std::{env, time::Duration};
 use validator::ValidationErrors;
 
 /// Load the configuration for the app.
@@ -127,11 +127,17 @@ pub struct EmailClientSettings {
     pub sender_email: String,
     pub base_url: String,
     pub authorization_token: Secret<String>,
+    pub timeout_in_milliseconds: u64,
 }
 
 impl EmailClientSettings {
     #[allow(clippy::missing_errors_doc)]
     pub fn sender(&self) -> Result<SubscriberEmail, ValidationErrors> {
         SubscriberEmail::parse(self.sender_email.clone())
+    }
+
+    #[must_use]
+    pub const fn timeout(&self) -> Duration {
+        Duration::from_millis(self.timeout_in_milliseconds)
     }
 }

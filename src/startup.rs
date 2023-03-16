@@ -84,6 +84,7 @@ pub fn create_email_client(configuration: &Settings) -> EmailClient {
         .expect("the sender email should be valid");
     let base_url = configuration.email_client.base_url.clone();
     let auth_token = configuration.email_client.authorization_token.clone();
+    let timeout = configuration.email_client.timeout();
 
-    EmailClient::new(sender_email, base_url, auth_token)
+    EmailClient::new(sender_email, base_url, auth_token, timeout)
 }
