@@ -38,6 +38,8 @@ impl EmailClient {
         text_content: &str,
     ) -> Result<(), reqwest::Error> {
         let url = format!("{}/v3/mail/send", self.base_url);
+        let auth_token =
+            format!("Bearer {}", self.authorization_token.expose_secret());
         let request_body = SendEmailRequest {
             from: self.sender.as_ref(),
             to: recipient.as_ref(),
@@ -46,8 +48,6 @@ impl EmailClient {
             text_content,
         }
         .json();
-        let auth_token =
-            format!("Bearer {}", self.authorization_token.expose_secret());
 
         self.http_client
             .post(url)
