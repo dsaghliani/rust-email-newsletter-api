@@ -101,8 +101,6 @@ impl<'a> SendEmailRequest<'a> {
 
 #[cfg(test)]
 mod tests {
-    #![allow(clippy::unwrap_used)]
-
     use helpers::{content, email, email_client, subject};
     use k9::{assert_err, assert_ok};
     use matchers::email_body_matches;
@@ -128,13 +126,9 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let subscriber_email = email();
-        let subject: String = subject();
-        let content: String = content();
-
         // Act.
         let _ = email_client
-            .send_email(&subscriber_email, &subject, &content, &content)
+            .send_email(&email(), &subject(), &content(), &content())
             .await;
 
         // Assert.
@@ -155,13 +149,9 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let subscriber_email = email();
-        let subject: String = subject();
-        let content: String = content();
-
         // Act.
         let outcome = email_client
-            .send_email(&subscriber_email, &subject, &content, &content)
+            .send_email(&email(), &subject(), &content(), &content())
             .await;
 
         // Assert.
@@ -180,13 +170,9 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let subscriber_email = email();
-        let subject: String = subject();
-        let content: String = content();
-
         // Act.
         let outcome = email_client
-            .send_email(&subscriber_email, &subject, &content, &content)
+            .send_email(&email(), &subject(), &content(), &content())
             .await;
 
         // Assert.
@@ -207,13 +193,9 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let subscriber_email = email();
-        let subject: String = subject();
-        let content: String = content();
-
         // Act.
         let outcome = email_client
-            .send_email(&subscriber_email, &subject, &content, &content)
+            .send_email(&email(), &subject(), &content(), &content())
             .await;
 
         // Assert.
@@ -240,8 +222,8 @@ mod tests {
             Paragraph(1..10).fake()
         }
 
-        #[allow(clippy::unwrap_used)]
         pub fn email() -> SubscriberEmail {
+            #[allow(clippy::unwrap_used)]
             SubscriberEmail::parse(SafeEmail().fake()).unwrap()
         }
 
