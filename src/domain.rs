@@ -4,12 +4,20 @@ pub use subscriber_name::SubscriberName;
 
 mod subscriber_email {
     use serde::Deserialize;
-    use validator::Validate;
+    use validator::{Validate, ValidationErrors};
 
     #[derive(Debug, Deserialize, Validate)]
     pub struct SubscriberEmail {
         #[validate(email)]
         email: String,
+    }
+
+    impl SubscriberEmail {
+        pub fn parse(email: String) -> Result<Self, ValidationErrors> {
+            let subscriber_email = Self { email };
+            subscriber_email.validate()?;
+            Ok(subscriber_email)
+        }
     }
 
     impl AsRef<str> for SubscriberEmail {

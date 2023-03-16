@@ -1,4 +1,4 @@
-use newsletter::{configuration, telemetry::init_subscriber};
+use newsletter::{configuration, create_email_client, telemetry::init_subscriber};
 use sqlx::postgres::PgPoolOptions;
 use std::{net::TcpListener, time::Duration};
 use tracing::debug;
@@ -21,8 +21,12 @@ async fn main() {
         .acquire_timeout(Duration::from_secs(10))
         .connect_lazy_with(configuration.database.connect_options());
 
+    let email_client = create_email_client(&configuration);
+
     #[allow(clippy::unwrap_used)]
-    newsletter::run(listener, connection_pool).await.unwrap();
+    newsletter::run(listener, connection_pool, email_client)
+        .await
+        .unwrap();
 }
 
 fn bind_listener(host: &str, port: u16) -> TcpListener {

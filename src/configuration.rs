@@ -1,8 +1,10 @@
+use crate::domain::SubscriberEmail;
 use config::{Config, ConfigError};
 use secrecy::{ExposeSecret, Secret};
 use serde::Deserialize;
 use sqlx::{postgres::PgConnectOptions, ConnectOptions};
 use std::env;
+use validator::ValidationErrors;
 
 /// Load the configuration for the app.
 ///
@@ -88,6 +90,7 @@ impl TryFrom<String> for AppEnvironment {
 pub struct Settings {
     pub application: ApplicationSettings,
     pub database: DatabaseSettings,
+    pub email_client: EmailClientSettings,
 }
 
 #[derive(Deserialize, Debug)]
@@ -116,5 +119,19 @@ impl DatabaseSettings {
             .database(&self.name);
         options.log_statements(tracing::log::LevelFilter::Trace);
         options
+    }
+}
+
+#[derive(Deserialize, Debug)]
+pub struct EmailClientSettings {
+    pub sender_email: String,
+    pub base_url: String,
+    pub authorization_token: Secret<String>,
+}
+
+impl EmailClientSettings {
+    #[allow(clippy::missing_errors_doc)]
+    pub fn sender(&self) -> Result<SubscriberEmail, ValidationErrors> {
+        SubscriberEmail::parse(self.sender_email.clone())
     }
 }

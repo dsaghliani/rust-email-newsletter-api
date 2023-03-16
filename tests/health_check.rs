@@ -1,6 +1,8 @@
 #![allow(clippy::unwrap_used)]
 
-use newsletter::{run, telemetry::init_subscriber};
+use newsletter::{
+    configuration, create_email_client, run, telemetry::init_subscriber,
+};
 use once_cell::sync::Lazy;
 use sqlx::PgPool;
 use std::net::TcpListener;
@@ -131,7 +133,13 @@ fn spawn_app(connection_pool: PgPool) -> TestApp {
     let listener = TcpListener::bind("127.0.0.1:0")
         .expect("the provided address should be valid");
     let port = listener.local_addr().unwrap().port();
-    let server = run(listener, connection_pool);
+    let email_client = {
+        let configuration =
+            configuration::build().expect("app configuration should be present");
+        create_email_client(&configuration)
+    };
+
+    let server = run(listener, connection_pool, email_client);
 
     tokio::spawn(server);
 

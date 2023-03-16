@@ -6,3 +6,6 @@ database:
   username: "postgres"
   password: "postgres"
   name: "newsletter_dev"
+email_client:
+  base_url: "localhost"
+  sender_email: "test@gmail.com"

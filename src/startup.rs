@@ -1,6 +1,9 @@
 use crate::{
+    configuration::Settings,
+    email_client::EmailClient,
     routes::{health_check::health, subscription::subscribe},
     telemetry::RequestIdMakeSpan,
+    AppState,
 };
 use anyhow::Context;
 use axum::{
@@ -8,8 +11,7 @@ use axum::{
     Router, Server,
 };
 use sqlx::PgPool;
-use std::net::TcpListener;
-
+use std::{net::TcpListener, sync::Arc};
 use tower_http::trace::TraceLayer;
 use tracing::{error, info};
 
@@ -24,10 +26,11 @@ use tracing::{error, info};
 pub async fn run(
     listener: TcpListener,
     connection_pool: PgPool,
+    email_client: EmailClient,
 ) -> anyhow::Result<()> {
     run_migrations(&connection_pool).await?;
 
-    let router = build_router(connection_pool);
+    let router = build_router(connection_pool, email_client);
 
     info!(
         "Listening on {}",
@@ -60,10 +63,27 @@ async fn run_migrations(connection_pool: &PgPool) -> sqlx::Result<()> {
     Ok(())
 }
 
-fn build_router(connection_pool: PgPool) -> Router {
+fn build_router(connection_pool: PgPool, email_client: EmailClient) -> Router {
+    let email_client = Arc::new(email_client);
+
     Router::new()
         .route("/health", get(health))
         .route("/subscriptions", post(subscribe))
         .layer(TraceLayer::new_for_http().make_span_with(RequestIdMakeSpan::new()))
-        .with_state(connection_pool)
+        .with_state(AppState {
+            connection_pool,
+            email_client,
+        })
+}
+
+#[must_use]
+pub fn create_email_client(configuration: &Settings) -> EmailClient {
+    let sender_email = configuration
+        .email_client
+        .sender()
+        .expect("the sender email should be valid");
+    let base_url = configuration.email_client.base_url.clone();
+    let auth_token = configuration.email_client.authorization_token.clone();
+
+    EmailClient::new(sender_email, base_url, auth_token)
 }
