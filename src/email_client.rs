@@ -103,19 +103,10 @@ impl<'a> SendEmailRequest<'a> {
 mod tests {
     #![allow(clippy::unwrap_used)]
 
-    use std::time::Duration;
-
-    use crate::{domain::SubscriberEmail, EmailClient};
-    use fake::{
-        faker::{
-            internet::en::SafeEmail,
-            lorem::en::{Paragraph, Sentence},
-        },
-        Fake, Faker,
-    };
+    use helpers::{content, email, email_client, subject};
     use k9::{assert_err, assert_ok};
     use matchers::email_body_matches;
-    use secrecy::Secret;
+    use std::time::Duration;
     use wiremock::{
         matchers::{any, header, header_exists, method, path},
         Mock, MockServer, ResponseTemplate,
@@ -125,10 +116,7 @@ mod tests {
     async fn send_email_fires_request_to_base_url() {
         // Arrange.
         let mock_server = MockServer::start().await;
-        let email_client = {
-            let sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
-            EmailClient::new(sender, mock_server.uri(), Secret::new(Faker.fake()))
-        };
+        let email_client = email_client(mock_server.uri());
 
         Mock::given(header_exists("Authorization"))
             .and(header("Content-Type", "application/json"))
@@ -140,9 +128,9 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let subscriber_email = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
-        let subject: String = Sentence(1..2).fake();
-        let content: String = Paragraph(1..10).fake();
+        let subscriber_email = email();
+        let subject: String = subject();
+        let content: String = content();
 
         // Act.
         let _ = email_client
@@ -159,10 +147,7 @@ mod tests {
     async fn send_email_succeeds_if_server_returns_200() {
         // Arrange.
         let mock_server = MockServer::start().await;
-        let email_client = {
-            let sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
-            EmailClient::new(sender, mock_server.uri(), Secret::new(Faker.fake()))
-        };
+        let email_client = email_client(mock_server.uri());
 
         Mock::given(any())
             .respond_with(ResponseTemplate::new(200))
@@ -170,9 +155,9 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let subscriber_email = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
-        let subject: String = Sentence(1..2).fake();
-        let content: String = Paragraph(1..10).fake();
+        let subscriber_email = email();
+        let subject: String = subject();
+        let content: String = content();
 
         // Act.
         let outcome = email_client
@@ -187,10 +172,7 @@ mod tests {
     async fn send_email_fails_if_server_returns_500() {
         // Arrange.
         let mock_server = MockServer::start().await;
-        let email_client = {
-            let sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
-            EmailClient::new(sender, mock_server.uri(), Secret::new(Faker.fake()))
-        };
+        let email_client = email_client(mock_server.uri());
 
         Mock::given(any())
             .respond_with(ResponseTemplate::new(500))
@@ -198,9 +180,9 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let subscriber_email = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
-        let subject: String = Sentence(1..2).fake();
-        let content: String = Paragraph(1..10).fake();
+        let subscriber_email = email();
+        let subject: String = subject();
+        let content: String = content();
 
         // Act.
         let outcome = email_client
@@ -215,10 +197,7 @@ mod tests {
     async fn send_email_times_out_if_server_takes_too_long() {
         // Arrange.
         let mock_server = MockServer::start().await;
-        let email_client = {
-            let sender = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
-            EmailClient::new(sender, mock_server.uri(), Secret::new(Faker.fake()))
-        };
+        let email_client = email_client(mock_server.uri());
 
         Mock::given(any())
             .respond_with(
@@ -228,9 +207,9 @@ mod tests {
             .mount(&mock_server)
             .await;
 
-        let subscriber_email = SubscriberEmail::parse(SafeEmail().fake()).unwrap();
-        let subject: String = Sentence(1..2).fake();
-        let content: String = Paragraph(1..10).fake();
+        let subscriber_email = email();
+        let subject: String = subject();
+        let content: String = content();
 
         // Act.
         let outcome = email_client
@@ -239,6 +218,36 @@ mod tests {
 
         // Assert.
         assert_err!(outcome);
+    }
+
+    mod helpers {
+        use fake::{
+            faker::{
+                internet::en::SafeEmail,
+                lorem::en::{Paragraph, Sentence},
+            },
+            Fake, Faker,
+        };
+        use secrecy::Secret;
+
+        use crate::{domain::SubscriberEmail, EmailClient};
+
+        pub fn subject() -> String {
+            Sentence(1..2).fake()
+        }
+
+        pub fn content() -> String {
+            Paragraph(1..10).fake()
+        }
+
+        #[allow(clippy::unwrap_used)]
+        pub fn email() -> SubscriberEmail {
+            SubscriberEmail::parse(SafeEmail().fake()).unwrap()
+        }
+
+        pub fn email_client(base_url: String) -> EmailClient {
+            EmailClient::new(email(), base_url, Secret::new(Faker.fake()))
+        }
     }
 
     mod matchers {
