@@ -1,38 +1,6 @@
-#![allow(clippy::unwrap_used)]
-
-use newsletter::{
-    configuration, create_email_client, run, telemetry::init_subscriber,
-};
-use once_cell::sync::Lazy;
 use sqlx::PgPool;
-use std::net::TcpListener;
 
-static TRACING: Lazy<()> = Lazy::new(|| {
-    if std::env::var("TEST_LOG").is_ok() {
-        init_subscriber(std::io::stdout);
-    } else {
-        init_subscriber(std::io::sink);
-    }
-});
-
-struct TestApp {
-    address: String,
-}
-
-#[sqlx::test]
-async fn health_works(pool: PgPool) {
-    // Arrange.
-    let app = spawn_app(pool);
-    let endpoint = format!("{}/health", app.address);
-    let client = reqwest::Client::new();
-
-    // Act.
-    let response = client.get(&endpoint).send().await.unwrap();
-
-    // Assert.
-    assert!(response.status().is_success());
-    assert_eq!(Some(0), response.content_length());
-}
+use crate::helpers::spawn_app;
 
 #[sqlx::test]
 async fn subscribe_returns_200_for_valid_form_data(pool: PgPool) {
@@ -130,26 +98,5 @@ async fn subscribe_returns_422_when_fields_are_present_but_invalid(pool: PgPool)
             "The API did not return a `422: Unprocessable Entity` when the payload was: \
             {error_message}"
         );
-    }
-}
-
-fn spawn_app(connection_pool: PgPool) -> TestApp {
-    Lazy::force(&TRACING);
-
-    let listener = TcpListener::bind("127.0.0.1:0")
-        .expect("the provided address should be valid");
-    let port = listener.local_addr().unwrap().port();
-    let email_client = {
-        let configuration =
-            configuration::build().expect("app configuration should be present");
-        create_email_client(&configuration)
-    };
-
-    let server = run(listener, connection_pool, email_client);
-
-    tokio::spawn(server);
-
-    TestApp {
-        address: format!("http://127.0.0.1:{port}"),
     }
 }
