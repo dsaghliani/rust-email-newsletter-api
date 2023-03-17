@@ -14,6 +14,20 @@ pub struct TestApp {
     pub address: String,
 }
 
+impl TestApp {
+    pub async fn post_subscriptions(&self, body: String) -> reqwest::Response {
+        let endpoint = format!("{}/subscriptions", self.address);
+
+        reqwest::Client::new()
+            .post(endpoint)
+            .header("Content-Type", "application/x-www-form-urlencoded")
+            .body(body)
+            .send()
+            .await
+            .expect("sending the request should not fail")
+    }
+}
+
 pub async fn spawn_app(connection_pool: PgPool) -> TestApp {
     Lazy::force(&TRACING);
 
