@@ -5,7 +5,7 @@ use crate::helpers::spawn_app;
 #[sqlx::test]
 async fn health_works(pool: PgPool) {
     // Arrange.
-    let app = spawn_app(pool);
+    let app = spawn_app(pool).await;
     let endpoint = format!("{}/health", app.address);
     let client = reqwest::Client::new();
 

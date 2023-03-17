@@ -11,6 +11,6 @@ mod startup;
 mod state;
 
 pub use email_client::EmailClient;
-pub use startup::{create_email_client, run};
+pub use startup::build_app;
 
 use state::AppState;

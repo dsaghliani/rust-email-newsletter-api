@@ -1,9 +1,6 @@
-use newsletter::{
-    configuration, create_email_client, run, telemetry::init_subscriber,
-};
+use newsletter::{build_app, configuration, telemetry::init_subscriber};
 use once_cell::sync::Lazy;
 use sqlx::PgPool;
-use std::net::TcpListener;
 
 static TRACING: Lazy<()> = Lazy::new(|| {
     if std::env::var("TEST_LOG").is_ok() {
@@ -17,21 +14,19 @@ pub struct TestApp {
     pub address: String,
 }
 
-pub fn spawn_app(connection_pool: PgPool) -> TestApp {
+pub async fn spawn_app(connection_pool: PgPool) -> TestApp {
     Lazy::force(&TRACING);
 
-    let listener = TcpListener::bind("127.0.0.1:0")
-        .expect("the provided address should be valid");
-    let port = listener.local_addr().unwrap().port();
-    let email_client = {
-        let configuration =
-            configuration::build().expect("app configuration should be present");
-        create_email_client(&configuration)
-    };
+    let mut configuration = configuration::build()
+        .expect("app configuration should be present and valid");
+    configuration.application.port = 0;
 
-    let server = run(listener, connection_pool, email_client);
+    let mut app = build_app(configuration).await.unwrap();
+    app.set_custom_connection_pool(connection_pool);
 
-    tokio::spawn(server);
+    let port = app.port();
+
+    tokio::spawn(async { app.run().await });
 
     TestApp {
         address: format!("http://127.0.0.1:{port}"),

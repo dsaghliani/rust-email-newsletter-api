@@ -5,7 +5,7 @@ use crate::helpers::spawn_app;
 #[sqlx::test]
 async fn subscribe_returns_200_for_valid_form_data(pool: PgPool) {
     // Arrange.
-    let app = spawn_app(pool.clone());
+    let app = spawn_app(pool.clone()).await;
     let endpoint = format!("{}/subscriptions", app.address);
     let client = reqwest::Client::new();
 
@@ -34,7 +34,7 @@ async fn subscribe_returns_200_for_valid_form_data(pool: PgPool) {
 #[sqlx::test]
 async fn subscribe_returns_422_when_data_is_missing(pool: PgPool) {
     // Arrange.
-    let app = spawn_app(pool);
+    let app = spawn_app(pool).await;
     let endpoint = format!("{}/subscriptions", app.address);
     let client = reqwest::Client::new();
     let test_cases = vec![
@@ -66,7 +66,7 @@ async fn subscribe_returns_422_when_data_is_missing(pool: PgPool) {
 #[sqlx::test]
 async fn subscribe_returns_422_when_fields_are_present_but_invalid(pool: PgPool) {
     // Arrange.
-    let app = spawn_app(pool);
+    let app = spawn_app(pool).await;
     let endpoint = format!("{}/subscriptions", app.address);
     let client = reqwest::Client::new();
     let test_cases = vec![
