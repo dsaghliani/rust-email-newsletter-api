@@ -943,6 +943,11 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "64e9829a50b42bb782c1df523f78d332fe371b10c661e78b7a3c34b0198e9fac"
 
 [[package]]
+name = "inspect_error"
+version = "0.1.0"
+source = "git+https://github.com/dsaghliani/inspect-error.git#d50b46f43699537cec75271593c1ee309a0213a6"
+
+[[package]]
 name = "instant"
 version = "0.1.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1125,6 +1130,7 @@ dependencies = [
  "config",
  "fake",
  "hyper",
+ "inspect_error",
  "k9",
  "once_cell",
  "quickcheck",

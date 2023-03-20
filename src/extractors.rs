@@ -8,6 +8,7 @@ mod validated_form {
         response::{IntoResponse, Response},
         Form,
     };
+    use inspect_error::InspectError;
     use serde::de::DeserializeOwned;
     use thiserror::Error;
     use tracing::error;
@@ -33,14 +34,12 @@ mod validated_form {
         ) -> Result<Self, Self::Rejection> {
             let Form(value) = Form::<T>::from_request(request, state)
                 .await
-                .map_err(|error| {
+                .inspect_error(|error| {
                     error!("Failed to serialize the form: {error}");
-                    error
                 })?;
 
-            value.validate().map_err(|errors| {
+            value.validate().inspect_error(|errors| {
                 error!("Failed to validate the form: [{errors}]");
-                errors
             })?;
 
             Ok(Self(value))

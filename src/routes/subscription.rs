@@ -2,6 +2,7 @@
 
 use crate::{domain::NewSubscriber, extractors::ValidatedForm};
 use axum::{extract::State, http::StatusCode, response::IntoResponse};
+use inspect_error::InspectError;
 use sqlx::PgPool;
 use tracing::error;
 use uuid::Uuid;
@@ -44,12 +45,7 @@ async fn insert_subscriber(
     )
     .execute(connection_pool)
     .await
-    // In the future, when it has stabilized, this can be replaced with
-    // `Result::inspect_err`.
-    .map_err(|error| {
-        error!("Faild to execute query: {error}");
-        error
-    })?;
+    .inspect_error(|error| error!("Faild to execute query: {error}"))?;
 
     Ok(())
 }

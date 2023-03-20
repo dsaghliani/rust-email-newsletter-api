@@ -9,6 +9,7 @@ use axum::{
     routing::{get, post},
     Router, Server,
 };
+use inspect_error::InspectError;
 use sqlx::{postgres::PgPoolOptions, PgPool};
 use tower_http::trace::TraceLayer;
 use tracing::{error, info};
@@ -125,12 +126,7 @@ async fn run_migrations(connection_pool: &PgPool) -> sqlx::Result<()> {
     sqlx::migrate!()
         .run(connection_pool)
         .await
-        // In the future, when it has stabilized, this can be replaced with
-        // `Result::inspect_err`.
-        .map_err(|error| {
-            error!("Failed to run migrations: {error}");
-            error
-        })?;
+        .inspect_error(|error| error!("Failed to run migrations: {error}"))?;
 
     Ok(())
 }
